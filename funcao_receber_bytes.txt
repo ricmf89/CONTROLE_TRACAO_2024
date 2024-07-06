@@ -1,0 +1,117 @@
+Descrição:
+Esta função processa um pacote de dados, verificando sua integridade e extraindo os valores contidos nele.
+Entrada:
+
+pacote: Um vetor de uint8 representando o pacote de dados a ser processado.
+
+Saída:
+
+valido: uint8, 1 se o pacote é válido, 0 caso contrário.
+dados1, dados2, dados3, dados4: single, os quatro valores de ponto flutuante extraídos do pacote.
+checksum_calculado_out: uint8, o checksum calculado do pacote.
+checksum_esperado_out: uint8, o checksum encontrado no pacote.
+pacote_comprimento_out: uint8, o comprimento do pacote de entrada.
+
+Constantes:
+
+START_BYTE: uint8(170), byte de início do pacote.
+END_BYTE: uint8(85), byte de fim do pacote.
+PACKET_LENGTH: uint8(21), comprimento total esperado do pacote.
+DATA_LENGTH: uint8(16), comprimento esperado dos dados no pacote.
+
+Processo:
+
+Inicialização: Todas as variáveis de saída são inicializadas com valores padrão.
+Verificação do comprimento do pacote:
+
+Se o comprimento não for igual a PACKET_LENGTH, a função retorna com pacote_comprimento_out definido como o comprimento real.
+
+
+Verificação do byte de início:
+
+Se o primeiro byte não for START_BYTE, a função retorna com checksum_calculado_out definido como o primeiro byte (para depuração).
+
+
+Verificação do byte de fim:
+
+Se o último byte não for END_BYTE, a função retorna com checksum_calculado_out definido como o último byte (para depuração).
+
+
+Extração e verificação do checksum:
+
+O checksum esperado é extraído do penúltimo byte do pacote.
+O checksum é calculado usando a função auxiliar calcular_checksum.
+Se os checksums não coincidirem, a função retorna.
+
+
+Verificação do comprimento dos dados:
+
+Se o comprimento dos dados extraídos não for igual a DATA_LENGTH, a função retorna.
+
+
+Extração dos dados:
+
+Os quatro valores single são extraídos dos bytes de dados usando typecast.
+
+
+Validação final:
+
+Se todas as verificações passarem, valido é definido como 1.
+
+
+
+Função auxiliar calcular_checksum:
+
+Calcula o checksum dos dados usando XOR bit a bit.
+
+Observações:
+
+A função retorna imediatamente se qualquer verificação falhar, mantendo os valores padrão para as saídas não definidas.
+O checksum é calculado sobre todos os bytes do pacote, exceto o byte de início e os dois bytes finais (checksum e byte de fim).
+A função assume que os dados são quatro valores de ponto flutuante de precisão simples (single).
+
+Esta função é projetada para trabalhar com um formato específico de pacote, onde os primeiros 3 bytes e os últimos 2 bytes são usados para controle e verificação, e os 16 bytes intermediários contêm os dados reais.
+
+
+Protocolo de Comunicação:
+Este protocolo é projetado para transmitir quatro valores de ponto flutuante de precisão simples (single) em um pacote estruturado. O pacote tem um total de 21 bytes, organizados da seguinte forma:
+
+Byte de Início (1 byte): Sempre 0xAA (170 em decimal)
+Tipo de Pacote (1 byte): Não utilizado explicitamente na função, mas reservado no protocolo
+Comprimento dos Dados (1 byte): Sempre 16 (4 valores * 4 bytes cada)
+Dados (16 bytes): Quatro valores single, cada um ocupando 4 bytes
+Checksum (1 byte): Calculado sobre os bytes 2 a 19
+Byte de Fim (1 byte): Sempre 0x55 (85 em decimal)
+
+Estrutura do Pacote:
+[Start] [Type] [Length] [Data1] [Data2] [Data3] [Data4] [Checksum] [End]
+1B     1B      1B      4B      4B      4B      4B       1B      1B
+Checksum:
+O método de checksum utilizado é conhecido como "CheckSum8 XOR". Este é um método simples, mas eficaz para detectar erros em transmissões de dados curtas. Aqui está como funciona:
+
+Inicializa-se o checksum com 0.
+Para cada byte nos dados (excluindo o byte de início e os dois bytes finais):
+
+Realiza-se uma operação XOR bit a bit entre o checksum atual e o byte.
+
+
+O resultado final é um único byte que representa o checksum.
+
+Características do CheckSum8 XOR:
+
+É rápido de calcular.
+Pode detectar um número ímpar de bits alterados.
+É eficaz para detectar erros de rajada (burst errors) curtos.
+Ocupa apenas 1 byte no pacote.
+
+Limitações:
+
+Não pode detectar um número par de bits alterados na mesma posição.
+Não é tão robusto quanto métodos mais avançados como CRC.
+
+Uso no Protocolo:
+
+O checksum é calculado sobre todos os bytes do pacote, exceto o byte de início (0xAA), o próprio byte de checksum e o byte de fim (0x55).
+Durante a verificação, o mesmo cálculo é realizado e o resultado é comparado com o byte de checksum no pacote.
+
+Este protocolo e método de checksum oferecem um bom equilíbrio entre simplicidade, eficiência e capacidade de detecção de erros para transmissões curtas e rápidas de dados, como é comum em sistemas embarcados e comunicações de sensores.
